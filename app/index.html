@@ -2,77 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚀 Rocket Trajectory</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rocket Trajectory</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap');
     
     body {
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #0a0a1f, #1a0033);
-      color: #00ffcc;
+      font-family: 'Inter', sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
       margin: 0;
-      padding: 15px;
+      padding: 16px;
       min-height: 100vh;
     }
     .container {
-      max-width: 650px;
+      max-width: 100%;
       margin: 0 auto;
-      background: rgba(0,0,0,0.85);
-      border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 0 30px rgba(0, 255, 200, 0.4);
+      background: #16161f;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.7);
+      border: 1px solid #2a2a35;
     }
-    h1 { text-align: center; font-size: 28px; margin-bottom: 30px; text-shadow: 0 0 15px #00ffcc; }
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 28px;
+      color: #f1f1f1;
+    }
     input {
       width: 100%;
-      padding: 18px;
-      margin: 12px 0;
-      background: #1a0033;
-      border: 2px solid #00ffcc;
+      padding: 16px;
+      margin: 10px 0;
+      background: #22222a;
+      border: 1px solid #444;
       border-radius: 12px;
-      color: white;
-      font-size: 18px;
+      color: #e0e0e0;
+      font-size: 17px;
     }
     button {
       width: 100%;
-      padding: 20px;
-      background: linear-gradient(90deg, #ff6600, #ffaa00);
-      color: black;
-      font-size: 22px;
-      font-weight: bold;
+      padding: 18px;
+      background: #2563eb;
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
       border: none;
       border-radius: 12px;
-      margin: 25px 0;
-      box-shadow: 0 0 20px #ff6600;
+      margin: 20px 0;
     }
     .result {
-      background: rgba(0, 255, 100, 0.1);
-      border: 2px solid #00ff88;
+      background: #1f252e;
+      border: 1px solid #334155;
       padding: 20px;
-      border-radius: 15px;
+      border-radius: 12px;
       margin-top: 20px;
-      font-size: 17px;
-      line-height: 1.8;
+      font-size: 16px;
+      line-height: 1.75;
     }
     canvas {
       width: 100%;
-      height: 300px;
-      background: #000;
-      border-radius: 15px;
+      height: 260px;
+      background: #111114;
+      border-radius: 12px;
       margin-top: 20px;
-      border: 2px solid #00ffcc;
+      border: 1px solid #333;
+      display: block;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🚀 ROCKET TRAJECTORY</h1>
+    <h1>ROCKET TRAJECTORY</h1>
     
     <input type="number" id="fuel" placeholder="Fuel Amount (kg)" />
     <input type="number" id="distance" placeholder="Target Distance (km)" />
     
-    <button onclick="calculate()">LAUNCH CALCULATION</button>
+    <button onclick="calculate()">CALCULATE TRAJECTORY</button>
     
     <div id="result" class="result"></div>
     <canvas id="graph"></canvas>
@@ -85,7 +92,7 @@
       const resultDiv = document.getElementById('result');
       
       if (!fuel || !distance || fuel <= 0 || distance <= 0) {
-        resultDiv.innerHTML = "❌ Please enter valid positive numbers";
+        resultDiv.innerHTML = "Please enter valid positive numbers.";
         return;
       }
 
@@ -93,45 +100,46 @@
       const time = (distance * 1000) / (deltaV * 0.6);
       const maxAlt = (deltaV ** 2) / (2 * 9.81) / 1000;
 
-      let status = deltaV > 5500 ? "✅ HIGH SUCCESS" : deltaV > 3500 ? "⚠️ MEDIUM" : "❌ LOW";
+      let status = deltaV > 5500 ? "HIGH SUCCESS" : deltaV > 3500 ? "MEDIUM RISK" : "LOW SUCCESS";
 
-      let output = `MISSION REPORT\n\n`;
-      output += `Fuel: ${fuel} kg\n`;
-      output += `Delta-V: ${deltaV.toFixed(0)} m/s\n`;
-      output += `Flight Time: ${time.toFixed(1)} seconds\n`;
-      output += `Max Altitude: ${maxAlt.toFixed(1)} km\n`;
-      output += `Status: ${status}`;
+      let output = `<strong>MISSION REPORT</strong><br><br>`;
+      output += `Fuel: ${fuel} kg<br>`;
+      output += `Delta-V: ${deltaV.toFixed(0)} m/s<br>`;
+      output += `Flight Time: ${time.toFixed(1)} seconds<br>`;
+      output += `Max Altitude: ${maxAlt.toFixed(1)} km<br>`;
+      output += `Status: <strong>${status}</strong>`;
 
-      resultDiv.innerHTML = output.replace(/\n/g, '<br>');
+      resultDiv.innerHTML = output;
 
-      // Better Trajectory Graph
+      // Responsive Graph
       const canvas = document.getElementById('graph');
+      canvas.width = canvas.offsetWidth;
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      ctx.strokeStyle = '#00ffcc';
+      ctx.strokeStyle = '#64748b';
       ctx.lineWidth = 6;
-      ctx.shadowBlur = 30;
-      ctx.shadowColor = '#00ffcc';
-
+      ctx.lineJoin = "round";
       ctx.beginPath();
-      const steps = 50;
+      
+      const steps = 60;
+      const maxHeight = Math.min(maxAlt * 3.2, canvas.height * 0.7);
+      
       for (let i = 0; i <= steps; i++) {
-        const progress = i / steps;
-        const x = progress * canvas.width;
-        const heightFactor = Math.sin(Math.PI * progress) * maxAlt * 0.8;
-        const y = canvas.height * 0.85 - heightFactor * 2.2;
+        const t = i / steps;
+        const x = t * canvas.width;
+        const y = canvas.height * 0.82 - Math.sin(Math.PI * t) * maxHeight;
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
 
-      // Ground line
-      ctx.strokeStyle = '#555';
-      ctx.lineWidth = 3;
+      // Ground
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(0, canvas.height * 0.88);
-      ctx.lineTo(canvas.width, canvas.height * 0.88);
+      ctx.moveTo(0, canvas.height * 0.9);
+      ctx.lineTo(canvas.width, canvas.height * 0.9);
       ctx.stroke();
     }
   </script>
