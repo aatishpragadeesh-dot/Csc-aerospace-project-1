@@ -42,7 +42,7 @@ This application is entirely front-end and requires no installation, external de
 ---
 
 ## 👨‍💻 Creator
-*@styleminepro_sg
+* @styleminepro_sg
 * Aerospace / Software Engineering Student*
 
 *Disclaimer: This is an independent student engineering project and is not officially affiliated with any university or aerospace organization.*
