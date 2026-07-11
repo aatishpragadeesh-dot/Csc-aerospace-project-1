@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚀 Rocket Mission</title>
+  <title>🚀 Rocket Trajectory</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
     
@@ -18,10 +18,10 @@
     .container {
       max-width: 650px;
       margin: 0 auto;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.85);
       border-radius: 20px;
       padding: 25px;
-      box-shadow: 0 0 30px rgba(0, 255, 200, 0.3);
+      box-shadow: 0 0 30px rgba(0, 255, 200, 0.4);
     }
     h1 {
       text-align: center;
@@ -88,7 +88,6 @@
       const fuel = parseFloat(document.getElementById('fuel').value);
       const distance = parseFloat(document.getElementById('distance').value);
       const resultDiv = document.getElementById('result');
-      const canvas = document.getElementById('graph');
       
       if (!fuel || !distance || fuel <= 0 || distance <= 0) {
         resultDiv.innerHTML = "❌ Please enter valid positive numbers";
@@ -110,13 +109,14 @@
 
       resultDiv.innerHTML = output.replace(/\n/g, '<br>');
 
-      // Draw Trajectory
+      // Draw Graph
+      const canvas = document.getElementById('graph');
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       ctx.strokeStyle = '#00ffcc';
       ctx.lineWidth = 5;
-      ctx.shadowBlur = 20;
+      ctx.shadowBlur = 25;
       ctx.shadowColor = '#00ffcc';
       
       ctx.beginPath();
@@ -124,7 +124,7 @@
       for (let i = 0; i <= steps; i++) {
         const progress = i / steps;
         const x = progress * canvas.width;
-        const y = canvas.height * 0.75 - Math.sin(Math.PI * progress) * (maxAlt * 30);
+        const y = canvas.height * 0.75 - Math.sin(Math.PI * progress) * (maxAlt * 35);
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
