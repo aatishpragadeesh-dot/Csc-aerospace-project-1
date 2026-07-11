@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚀 Rocket Trajectory</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 { text-align: center; margin-bottom: 30px; }
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      background: #1e1e2e;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 18px;
+      font-size: 20px;
+      font-weight: bold;
+      background: #ff6600;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .result {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+      white-space: pre-line;
+      font-size: 17px;
+    }
+    canvas {
+      width: 100%;
+      height: 250px;
+      background: #111;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Rocket Trajectory Calculator</h1>
+    
+    <input type="number" id="fuel" placeholder="Rocket Fuel (kg)" />
+    <input type="number" id="distance" placeholder="Distance / Range (km)" />
+    
+    <button onclick="calculate()">CALCULATE MISSION</button>
+    
+    <div id="result" class="result"></div>
+    <canvas id="graph" width="600" height="250"></canvas>
+  </div>
+
+  <script>
+    function calculate() {
+      const fuel = parseFloat(document.getElementById('fuel').value);
+      const distance = parseFloat(document.getElementById('distance').value);
+      const resultDiv = document.getElementById('result');
+      
+      if (!fuel || !distance || fuel <= 0 || distance <= 0) {
+        resultDiv.innerHTML = "❌ Please enter valid positive numbers";
+        return;
+      }
+
+      const exhaustVel = 3000;
+      const deltaV = exhaustVel * Math.log(fuel/800 + 1);
+      const time = (distance * 1000) / (deltaV * 0.65);
+      const maxAlt = (deltaV * deltaV) / (2 * 9.81);
+
+      let output = `✅ Mission Calculated!\n\n`;
+      output += `Fuel Used: ${fuel.toFixed(0)} kg\n`;
+      output += `Delta-V: ${deltaV.toFixed(0)} m/s\n`;
+      output += `Flight Time: ${time.toFixed(1)} seconds\n`;
+      output += `Max Altitude: ${(maxAlt/1000).toFixed(1)} km\n`;
+      output += `Feasibility: ${deltaV > 4500 ? 'HIGH ✅' : 'MEDIUM ⚠️'}\n`;
+
+      resultDiv.innerHTML = output;
+
+      // Draw simple trajectory graph
+      drawTrajectory(distance, maxAlt);
+    }
+
+    function drawTrajectory(dist, alt) {
+      const canvas = document.getElementById('graph');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.strokeStyle = '#ff6600';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      
+      const points = 30;
+      for (let i = 0; i <= points; i++) {
+        const x = (i / points) * canvas.width;
+        const y = canvas.height - (Math.sin(Math.PI * i / points) * (alt / 10000) * canvas.height * 0.8);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      
+      ctx.fillStyle = 'white';
+      ctx.font = '14px Arial';
+      ctx.fillText('Trajectory Path', 20, 30);
+    }
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚀 Rocket Trajectory</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: white;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 { text-align: center; margin-bottom: 30px; }
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      background: #1e1e2e;
+      color: white;
+    }
+    button {
+      width: 100%;
+      padding: 18px;
+      font-size: 20px;
+      font-weight: bold;
+      background: #ff6600;
+      color: black;
+      border: none;
+      border-radius: 10px;
+      margin: 20px 0;
+    }
+    .result {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 20px;
+      white-space: pre-line;
+      font-size: 17px;
+    }
+    canvas {
+      width: 100%;
+      height: 250px;
+      background: #111;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Rocket Trajectory Calculator</h1>
+    
+    <input type="number" id="fuel" placeholder="Rocket Fuel (kg)" />
+    <input type="number" id="distance" placeholder="Distance / Range (km)" />
+    
+    <button onclick="calculate()">CALCULATE MISSION</button>
+    
+    <div id="result" class="result"></div>
+    <canvas id="graph" width="600" height="250"></canvas>
+  </div>
+
+  <script>
+    function calculate() {
+      const fuel = parseFloat(document.getElementById('fuel').value);
+      const distance = parseFloat(document.getElementById('distance').value);
+      const resultDiv = document.getElementById('result');
+      
+      if (!fuel || !distance || fuel <= 0 || distance <= 0) {
+        resultDiv.innerHTML = "❌ Please enter valid positive numbers";
+        return;
+      }
+
+      const exhaustVel = 3000;
+      const deltaV = exhaustVel * Math.log(fuel/800 + 1);
+      const time = (distance * 1000) / (deltaV * 0.65);
+      const maxAlt = (deltaV * deltaV) / (2 * 9.81);
+
+      let output = `✅ Mission Calculated!\n\n`;
+      output += `Fuel Used: ${fuel.toFixed(0)} kg\n`;
+      output += `Delta-V: ${deltaV.toFixed(0)} m/s\n`;
+      output += `Flight Time: ${time.toFixed(1)} seconds\n`;
+      output += `Max Altitude: ${(maxAlt/1000).toFixed(1)} km\n`;
+      output += `Feasibility: ${deltaV > 4500 ? 'HIGH ✅' : 'MEDIUM ⚠️'}\n`;
+
+      resultDiv.innerHTML = output;
+
+      // Draw simple trajectory graph
+      drawTrajectory(distance, maxAlt);
+    }
+
+    function drawTrajectory(dist, alt) {
+      const canvas = document.getElementById('graph');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.strokeStyle = '#ff6600';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      
+      const points = 30;
+      for (let i = 0; i <= points; i++) {
+        const x = (i / points) * canvas.width;
+        const y = canvas.height - (Math.sin(Math.PI * i / points) * (alt / 10000) * canvas.height * 0.8);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      
+      ctx.fillStyle = 'white';
+      ctx.font = '14px Arial';
+      ctx.fillText('Trajectory Path', 20, 30);
+    }
+  </script>
+</body>
+</html>
