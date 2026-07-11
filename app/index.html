@@ -307,21 +307,35 @@
         return;
       }
 
-      const deltaV = 3000 * Math.log(fuel / 700 + 1);
-      const time = (distance * 1000) / (deltaV * 0.6);
-      const maxAlt = (deltaV ** 2) / (2 * 9.81) / 1000;
+      // ===== Realistic Rocket Physics =====
+const g0 = 9.81;              // Gravity (m/s²)
+const Isp = 350;              // Engine specific impulse (seconds)
+const dryMass = 1000;         // Rocket dry mass (kg)
 
-      // Status now factors in both deltaV and whether distance is feasible
+const fuelMass = fuel;
+const initialMass = dryMass + fuelMass;
+const finalMass = dryMass;
+
+// Tsiolkovsky Rocket Equation
+const deltaV = Isp * g0 * Math.log(initialMass / finalMass);
+
+// Approximate vertical altitude (vacuum, no drag)
+const maxAlt = (deltaV * deltaV) / (2 * g0) / 1000;
+
+// Approximate total flight time
+const time = (2 * deltaV) / g0;
+
       let status;
-      const distanceFeasible = maxAlt >= distance * 0.5;
-      
-      if (deltaV > 5500 && distanceFeasible) {
-        status = "HIGH SUCCESS";
-      } else if (deltaV > 3500 && distanceFeasible) {
-        status = "MEDIUM RISK";
-      } else {
-        status = "LOW SUCCESS";
-      }
+
+if (deltaV >= 9400) {
+    status = "ORBIT POSSIBLE";
+} else if (deltaV >= 5000) {
+    status = "SUBORBITAL";
+} else if (deltaV >= 2500) {
+    status = "HIGH ALTITUDE";
+} else {
+    status = "INSUFFICIENT ΔV";
+}
 
       // Generate suggestions based on values
       let fuelSuggestion = fuel < 500 ? "Low fuel - risky mission" : fuel < 1000 ? "Moderate fuel - proceed carefully" : "Adequate fuel supply";
