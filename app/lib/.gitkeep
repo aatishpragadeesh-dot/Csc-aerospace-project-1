@@ -1,4 +1,0 @@
-app/
-├── pubspec.yaml
-├── lib/
-│   └── main.dart
