@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jet Engine Simulator | Aerospace Engineering Platform</title>
+    <style>
+        /* =========================================
+           CSS VARIABLES & GLOBAL RESET
+           ========================================= */
+        :root {
+            --bg-dark: #050505;
+            --panel-bg: rgba(15, 23, 42, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --alert-red: #ef4444;
+            --alert-green: #10b981;
+            --alert-amber: #f59e0b;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* =========================================
+           GLASSMORPHISM PANELS & UI
+           ========================================= */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            z-index: 10;
+            position: absolute;
+            transition: all 0.3s ease;
+        }
+
+        /* Welcome Screen */
+        #welcome-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, #1e293b 0%, #000000 100%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease;
+        }
+
+        .title-container {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 300;
+            letter-spacing: 8px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .subtitle {
+            color: var(--accent-cyan);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
+            border: 1px solid var(--accent-cyan);
+            color: var(--text-main);
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            background: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.6);
+            transform: scale(1.05);
+        }
+
+        /* Main Dashboard Elements */
+        #dashboard {
+            opacity: 0;
+            pointer-events: none;
+            width: 100%; height: 100%;
+            position: absolute;
+            z-index: 10;
+        }
+
+        /* Top Header */
+        #header {
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            padding: 15px 40px;
+            border-radius: 30px;
+        }
+
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.2rem; font-weight: bold; color: var(--accent-cyan); font-variant-numeric: tabular-nums; }
+
+        /* Left Gauges */
+        #left-panel {
+            top: 100px; left: 20px;
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .gauge-container {
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 10px;
+        }
+        
+        .gauge-container:last-child { border-bottom: none; padding-bottom: 0; }
+        
+        .gauge-bar-bg {
+            width: 100%; height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .gauge-bar-fill {
+            height: 100%; width: 0%;
+            background: var(--accent-cyan);
+            transition: width 0.1s linear, background-color 0.3s ease;
+        }
+
+        /* Bottom Controls */
+        #bottom-panel {
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-control {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .btn-control:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent-cyan);
+        }
+
+        /* Slider */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        input[type=range] {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            background: rgba(255,255,255,0.1);
+            height: 8px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        /* Diagnostics Modal */
+        #diagnostic-panel {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+
+        .diag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .diag-status { color: var(--text-muted); }
+        .status-pass { color: var(--alert-green); font-weight: bold; }
+        .status-warn { color: var(--alert-amber); font-weight: bold; }
+        .status-fail { color: var(--alert-red); font-weight: bold; }
+
+        /* Status Indicator LEDs */
+        .status-leds {
+            display: flex;
+            gap: 10px;
+            position: absolute;
+            top: 20px; right: 20px;
+        }
+        
+        .led {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: #333;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .led.active-green { background: var(--alert-green); box-shadow: 0 0 10px var(--alert-green); }
+        .led.active-red { background: var(--alert-red); box-shadow: 0 0 10px var(--alert-red); }
+        .led.active-amber { background: var(--alert-amber); box-shadow: 0 0 10px var(--alert-amber); }
+
+    </style>
+
+    <!-- Import Maps for Three.js and GSAP -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "gsap": "https://unpkg.com/gsap@3.12.5/index.js"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Canvas Container -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Welcome Screen -->
+    <div id="welcome-screen">
+        <div class="title-container">
+            <h1>Jet Engine Simulator</h1>
+            <div class="subtitle">Interactive Turbofan Engineering Visualization Platform</div>
+        </div>
+        <button class="btn-primary" id="btn-start-sim">▶ START SIMULATION</button>
+    </div>
+
+    <!-- Main UI Dashboard -->
+    <div id="dashboard">
+        
+        <!-- Status LEDs -->
+        <div class="status-leds glass-panel">
+            <div class="led active-green" id="led-pwr" title="Power"></div>
+            <div class="led" id="led-ign" title="Ignition"></div>
+            <div class="led" id="led-warn" title="Warning"></div>
+        </div>
+
+        <!-- Header Telemetry -->
+        <div id="header" class="glass-panel">
+            <div class="stat-group">
+                <span class="stat-label">System Status</span>
+                <span class="stat-value" id="val-status">IDLE</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">FPS</span>
+                <span class="stat-value" id="val-fps">60</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Thrust (kN)</span>
+                <span class="stat-value" id="val-thrust">0.00</span>
+            </div>
+        </div>
+
+        <!-- Left Panel Gauges -->
+        <div id="left-panel" class="glass-panel">
+            <div class="gauge-container">
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="stat-label">N1 (Fan Speed)</span>
+                    <span class="stat-value" id="val-n1">0%</span>
+                </div>
+                <div class="gauge-bar-bg"><div class="gauge-bar-fill" id="bar-n1"></div></div>
+            </div>
+            <div class="gauge-container">
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="stat-label">N2 (Core Speed)</span>
+                    <span class="stat-value" id="val-n2">0%</span>
+                </div>
+                <div class="gauge-bar-bg"><div class="gauge-bar-fill" id="bar-n2"></div></div>
+            </div>
+            <div class="gauge-container">
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="stat-label">EGT (Exhaust Temp)</span>
+                    <span class="stat-value" id="val-egt">15°C</span>
+                </div>
+                <div class="gauge-bar-bg"><div class="gauge-bar-fill" id="bar-egt"></div></div>
+            </div>
+            <div class="gauge-container">
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="stat-label">Fuel Flow (kg/s)</span>
+                    <span class="stat-value" id="val-fuel">0.00</span>
+                </div>
+                <div class="gauge-bar-bg"><div class="gauge-bar-fill" id="bar-fuel"></div></div>
+            </div>
+            <div class="gauge-container">
+                <div style="display:flex; justify-content:space-between;">
+                    <span class="stat-label">Vibration</span>
+                    <span class="stat-value" id="val-vib">0.0 ips</span>
+                </div>
+                <div class="gauge-bar-bg"><div class="gauge-bar-fill" id="bar-vib"></div></div>
+            </div>
+        </div>
+
+        <!-- Diagnostic Panel Overlay -->
+        <div id="diagnostic-panel" class="glass-panel">
+            <h3 style="color:var(--accent-cyan); margin-bottom: 10px; text-transform:uppercase; letter-spacing: 1px;">Automated Diagnostics</h3>
+            <div id="diag-list">
+                <!-- Injected via JS -->
+            </div>
+            <div id="diag-final" style="margin-top: 15px; text-align:center; font-size:1.2rem; display:none;">
+                <span class="status-pass">SYSTEM READY</span>
+            </div>
+        </div>
+
+        <!-- Bottom Controls -->
+        <div id="bottom-panel" class="glass-panel">
+            <div class="slider-container">
+                <span class="stat-label">Throttle Override</span>
+                <input type="range" id="throttle-slider" min="0" max="100" value="0">
+                <span class="stat-value" id="val-throttle">0%</span>
+            </div>
+            <div class="controls-row">
+                <button class="btn-control" id="btn-start">START ENGINE</button>
+                <button class="btn-control" id="btn-stop">CUTOFF</button>
+                <button class="btn-control" id="btn-diag">RUN DIAGNOSTICS</button>
+                <button class="btn-control" id="btn-cutaway">TOGGLE CUTAWAY</button>
+                <button class="btn-control" id="btn-cam">AUTO CAMERA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Logic Script -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import gsap from 'gsap';
+
+        /**
+         * PROFESSIONAL 3D TURBOFAN SIMULATOR
+         * Architecture:
+         * 1. AppManager: Handles global state, rendering loop, UI binding.
+         * 2. EngineModel: Constructs procedural 3D elements (Fan, Compressor, Combustion, Turbine).
+         * 3. DiagnosticsManager: Handles the automated testing sequence.
+         */
+
+        // --- GLOBAL STATE ---
+        const State = {
+            targetRPM: 0,
+            currentN1: 0,
+            currentN2: 0,
+            egt: 15, // Celsius
+            fuelFlow: 0,
+            isCutaway: true,
+            isAutoCam: false,
+            diagnosticMode: false
+        };
+
+        // --- UTILITIES ---
+        const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
+
+        // ==========================================
+        // SCENE SETUP & POST-PROCESSING
+        // ==========================================
+        const canvas = document.querySelector('#webgl-canvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.localClippingEnabled = true; // IMPORTANT for cutaway
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050505);
+        scene.fog = new THREE.FogExp2(0x050505, 0.015);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(-15, 8, 20);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxDistance = 50;
+        controls.minDistance = 5;
+
+        // Post Processing (Bloom for engine glow/exhaust)
+        const composer = new EffectComposer(renderer);
+        const renderPass = new RenderPass(scene, camera);
+        composer.addPass(renderPass);
+        
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.2;
+        bloomPass.strength = 0.8; // Adjusted dynamically
+        bloomPass.radius = 0.5;
+        composer.addPass(bloomPass);
+
+        // ==========================================
+        // LIGHTING (HDR Simulation)
+        // ==========================================
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+
+        const blueFill = new THREE.PointLight(0x06b6d4, 1.5, 50);
+        blueFill.position.set(-10, -5, -10);
+        scene.add(blueFill);
+
+        // ==========================================
+        // PROCEDURAL ENGINE MODEL
+        // ==========================================
+        const engineGroup = new THREE.Group();
+        scene.add(engineGroup);
+
+        // Materials (PBR Professional Finish)
+        const clippingPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0); // Cuts half the engine
+        const clipPlanes = [clippingPlane];
+
+        const matTitanium = new THREE.MeshStandardMaterial({
+            color: 0x888888, metalness: 0.8, roughness: 0.3,
+            side: THREE.DoubleSide, clippingPlanes: clipPlanes
+        });
+        const matDarkMetal = new THREE.MeshStandardMaterial({
+            color: 0x222222, metalness: 0.6, roughness: 0.6,
+            side: THREE.DoubleSide, clippingPlanes: clipPlanes
+        });
+        const matAluminium = new THREE.MeshStandardMaterial({
+            color: 0xaaaaaa, metalness: 0.9, roughness: 0.2,
+            side: THREE.DoubleSide, clippingPlanes: clipPlanes
+        });
+        const matCombustor = new THREE.MeshStandardMaterial({
+            color: 0x442211, emissive: 0xff4400, emissiveIntensity: 0.0, // Altered dynamically
+            metalness: 0.5, roughness: 0.7, side: THREE.DoubleSide, clippingPlanes: clipPlanes
+        });
+
+        // 1. Nacelle (Outer Casing)
+        const nacelleGeo = new THREE.CylinderGeometry(5.2, 4.8, 18, 64, 1, true);
+        nacelleGeo.rotateZ(Math.PI / 2);
+        const nacelle = new THREE.Mesh(nacelleGeo, matDarkMetal);
+        engineGroup.add(nacelle);
+
+        // 2. Main Shaft
+        const shaftGeo = new THREE.CylinderGeometry(0.5, 0.5, 17, 32);
+        shaftGeo.rotateZ(Math.PI / 2);
+        const shaft = new THREE.Mesh(shaftGeo, matTitanium);
+        engineGroup.add(shaft);
+
+        // Rotors grouping (N1 and N2)
+        const spoolN1 = new THREE.Group(); // Fan and Low Pressure Turbine
+        const spoolN2 = new THREE.Group(); // Compressors and High Pressure Turbine
+        engineGroup.add(spoolN1);
+        engineGroup.add(spoolN2);
+
+        // 3. Fan Blades (N1)
+        const fanGeo = new THREE.BoxGeometry(0.2, 9.5, 1.5);
+        const fanHubGeo = new THREE.CylinderGeometry(1.2, 1.5, 2, 32);
+        fanHubGeo.rotateZ(Math.PI / 2);
+        const fanHub = new THREE.Mesh(fanHubGeo, matAluminium);
+        fanHub.position.x = -7;
+        
+        for (let i = 0; i < 24; i++) {
+            const blade = new THREE.Mesh(fanGeo, matTitanium);
+            const angle = (i / 24) * Math.PI * 2;
+            blade.position.set(0, Math.sin(angle) * 2.5, Math.cos(angle) * 2.5);
+            blade.rotation.x = angle;
+            blade.rotation.y = 0.4; // Twist
+            fanHub.add(blade);
+        }
+        spoolN1.add(fanHub);
+
+        // 4. Compressors (N2) - Multiple stages
+        const createCompressorStage = (xPos, radius, bladesCount) => {
+            const stage = new THREE.Group();
+            stage.position.x = xPos;
+            const hub = new THREE.Mesh(new THREE.CylinderGeometry(radius*0.8, radius*0.8, 0.5, 32).rotateZ(Math.PI/2), matAluminium);
+            stage.add(hub);
+            const bladeGeo = new THREE.BoxGeometry(0.1, radius*2, 0.4);
+            for(let i=0; i<bladesCount; i++) {
+                const blade = new THREE.Mesh(bladeGeo, matTitanium);
+                const angle = (i / bladesCount) * Math.PI * 2;
+                blade.rotation.x = angle;
+                blade.rotation.y = 0.3;
+                stage.add(blade);
+            }
+            return stage;
+        };
+
+        // Low Pressure Compressor (Attached to N1)
+        spoolN1.add(createCompressorStage(-4, 3.5, 30));
+        spoolN1.add(createCompressorStage(-3.3, 3.2, 32));
+        
+        // High Pressure Compressor (Attached to N2)
+        spoolN2.add(createCompressorStage(-2, 2.8, 36));
+        spoolN2.add(createCompressorStage(-1.3, 2.5, 40));
+        spoolN2.add(createCompressorStage(-0.6, 2.2, 44));
+
+        // 5. Combustion Chamber (Static)
+        const combustorGeo = new THREE.TorusGeometry(2.5, 0.8, 16, 64);
+        combustorGeo.rotateY(Math.PI / 2);
+        const combustor = new THREE.Mesh(combustorGeo, matCombustor);
+        combustor.position.x = 2;
+        engineGroup.add(combustor);
+
+        // 6. Turbines
+        // High Pressure Turbine (Drives N2)
+        spoolN2.add(createCompressorStage(4.5, 2.5, 40));
+        // Low Pressure Turbine (Drives N1)
+        spoolN1.add(createCompressorStage(6.0, 3.2, 30));
+        spoolN1.add(createCompressorStage(7.0, 3.5, 30));
+
+        // Center entire engine
+        engineGroup.position.set(0, 0, 0);
+
+        // ==========================================
+        // PARTICLE SYSTEMS (Fuel & Exhaust)
+        // ==========================================
+        const exhaustParticleCount = 2000;
+        const exhaustGeo = new THREE.BufferGeometry();
+        const exhaustPos = new Float32Array(exhaustParticleCount * 3);
+        const exhaustLife = new Float32Array(exhaustParticleCount);
+
+        for(let i=0; i<exhaustParticleCount; i++) {
+            exhaustPos[i*3] = 4 + Math.random() * 5; // Start near combustor
+            exhaustPos[i*3+1] = (Math.random() - 0.5) * 4;
+            exhaustPos[i*3+2] = (Math.random() - 0.5) * 4;
+            exhaustLife[i] = Math.random();
+        }
+        exhaustGeo.setAttribute('position', new THREE.BufferAttribute(exhaustPos, 3));
+        exhaustGeo.setAttribute('life', new THREE.BufferAttribute(exhaustLife, 1));
+
+        const exhaustMat = new THREE.PointsMaterial({
+            size: 0.4,
+            color: 0x06b6d4, // Cyan/Blue exhaust
+            transparent: true,
+            opacity: 0.0, // Controlled by RPM
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const exhaustSystem = new THREE.Points(exhaustGeo, exhaustMat);
+        engineGroup.add(exhaustSystem);
+
+        // ==========================================
+        // UI BINDING & UPDATES
+        // ==========================================
+        const DOM = {
+            n1: document.getElementById('val-n1'), barN1: document.getElementById('bar-n1'),
+            n2: document.getElementById('val-n2'), barN2: document.getElementById('bar-n2'),
+            egt: document.getElementById('val-egt'), barEgt: document.getElementById('bar-egt'),
+            fuel: document.getElementById('val-fuel'), barFuel: document.getElementById('bar-fuel'),
+            thrust: document.getElementById('val-thrust'),
+            fps: document.getElementById('val-fps'),
+            status: document.getElementById('val-status'),
+            throttleSlider: document.getElementById('throttle-slider'),
+            ledIgn: document.getElementById('led-ign'),
+            ledWarn: document.getElementById('led-warn')
+        };
+
+        function updateDashboard() {
+            // N1 (Fan) - scales slightly lower than N2
+            const n1Percent = (State.currentN1 / 100);
+            DOM.n1.innerText = (n1Percent * 100).toFixed(1) + '%';
+            DOM.barN1.style.width = (n1Percent * 100) + '%';
+            
+            // N2 (Core)
+            const n2Percent = (State.currentN2 / 100);
+            DOM.n2.innerText = (n2Percent * 100).toFixed(1) + '%';
+            DOM.barN2.style.width = (n2Percent * 100) + '%';
+
+            // EGT & Fuel
+            DOM.egt.innerText = State.egt.toFixed(0) + '°C';
+            const egtPercent = Math.min(State.egt / 1200, 1);
+            DOM.barEgt.style.width = (egtPercent * 100) + '%';
+            DOM.barEgt.style.backgroundColor = egtPercent > 0.85 ? 'var(--alert-red)' : 'var(--accent-cyan)';
+
+            DOM.fuel.innerText = State.fuelFlow.toFixed(2);
+            DOM.barFuel.style.width = (State.fuelFlow / 5 * 100) + '%';
+
+            // Thrust computation (non-linear)
+            const thrust = Math.pow(n1Percent, 2) * 120; // Max 120kN
+            DOM.thrust.innerText = thrust.toFixed(2);
+
+            // LEDs
+            if(State.fuelFlow > 0.5) DOM.ledIgn.classList.add('active-amber');
+            else DOM.ledIgn.classList.remove('active-amber');
+
+            if(State.egt > 1000) DOM.ledWarn.classList.add('active-red');
+            else DOM.ledWarn.classList.remove('active-red');
+        }
+
+        // ==========================================
+        // ANIMATION & RENDER LOOP
+        // ==========================================
+        const clock = new THREE.Clock();
+        let frames = 0;
+        let lastTime = performance.now();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            // FPS Counter
+            frames++;
+            if (performance.now() - lastTime >= 1000) {
+                DOM.fps.innerText = frames;
+                frames = 0;
+                lastTime = performance.now();
+            }
+
+            // Engine Physics Integration (Spooling delay)
+            // N2 reacts faster than N1
+            State.currentN2 = lerp(State.currentN2, State.targetRPM, 0.02);
+            State.currentN1 = lerp(State.currentN1, State.currentN2 * 0.95, 0.015);
+            
+            // Temperature & Fuel logic
+            const targetFuel = State.targetRPM > 5 ? (State.targetRPM / 100) * 4.5 + 0.5 : 0;
+            State.fuelFlow = lerp(State.fuelFlow, targetFuel, 0.05);
+
+            const targetEgt = State.currentN2 > 5 ? 300 + (State.currentN2 / 100) * 800 : 15;
+            State.egt = lerp(State.egt, targetEgt, 0.01);
+
+            // Apply Rotations
+            // Speed multiplier: 100% RPM = fast rotation
+            const speedN1 = (State.currentN1 / 100) * 15 * delta;
+            const speedN2 = (State.currentN2 / 100) * 25 * delta;
+            spoolN1.rotation.x += speedN1;
+            spoolN2.rotation.x += speedN2;
+
+            // Visual Effects (Combustor Glow)
+            matCombustor.emissiveIntensity = Math.min((State.egt - 300) / 700, 1) * 2.0;
+
+            // Bloom Intensity based on thrust
+            bloomPass.strength = 0.8 + (State.currentN1 / 100) * 1.5;
+
+            // Particle Animation (Exhaust)
+            const positions = exhaustGeo.attributes.position.array;
+            const lives = exhaustGeo.attributes.life.array;
+            const exhaustVelocity = 5 + (State.currentN1 / 100) * 20;
+            
+            exhaustMat.opacity = (State.currentN1 / 100) * 0.8;
+
+            for(let i=0; i<exhaustParticleCount; i++) {
+                positions[i*3] += exhaustVelocity * delta; // Move right (Z in standard, X in our rotated engine)
+                lives[i] -= delta;
+                
+                // Add some turbulence
+                positions[i*3+1] += Math.sin(time * 10 + i) * 0.02;
+                positions[i*3+2] += Math.cos(time * 10 + i) * 0.02;
+
+                if(positions[i*3] > 20) { // Reset particle
+                    positions[i*3] = 4 + Math.random() * 2; // Near combustor/turbine exit
+                    positions[i*3+1] = (Math.random() - 0.5) * 3;
+                    positions[i*3+2] = (Math.random() - 0.5) * 3;
+                }
+            }
+            exhaustGeo.attributes.position.needsUpdate = true;
+
+            // Auto Camera movement
+            if(State.isAutoCam) {
+                camera.position.x = Math.sin(time * 0.2) * 20;
+                camera.position.z = Math.cos(time * 0.2) * 20;
+                camera.position.y = 8 + Math.sin(time * 0.5) * 5;
+                camera.lookAt(0,0,0);
+            }
+
+            controls.update();
+            updateDashboard();
+            composer.render();
+        }
+
+        // ==========================================
+        // INTERACTIVITY & EVENT LISTENERS
+        // ==========================================
+        
+        // Start Simulation Button
+        document.getElementById('btn-start-sim').addEventListener('click', () => {
+            document.getElementById('welcome-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('welcome-screen').style.display = 'none';
+                gsap.to('#dashboard', { opacity: 1, duration: 1.5, pointerEvents: 'auto' });
+            }, 1000);
+        });
+
+        // Throttle Slider
+        DOM.throttleSlider.addEventListener('input', (e) => {
+            if(State.diagnosticMode) return; // Lock out during testing
+            State.targetRPM = parseFloat(e.target.value);
+            document.getElementById('val-throttle').innerText = State.targetRPM + '%';
+            DOM.status.innerText = State.targetRPM > 5 ? "RUNNING" : "SPOOLING DOWN";
+            DOM.status.style.color = State.targetRPM > 5 ? "var(--alert-green)" : "var(--accent-cyan)";
+        });
+
+        // Start Engine
+        document.getElementById('btn-start').addEventListener('click', () => {
+            if(State.diagnosticMode) return;
+            State.targetRPM = 20; // Idle
+            DOM.throttleSlider.value = 20;
+            document.getElementById('val-throttle').innerText = '20%';
+            DOM.status.innerText = "STARTING...";
+            DOM.status.style.color = "var(--alert-amber)";
+        });
+
+        // Cutoff Engine
+        document.getElementById('btn-stop').addEventListener('click', () => {
+            if(State.diagnosticMode) return;
+            State.targetRPM = 0;
+            DOM.throttleSlider.value = 0;
+            document.getElementById('val-throttle').innerText = '0%';
+            DOM.status.innerText = "SHUTTING DOWN";
+            DOM.status.style.color = "var(--alert-red)";
+        });
+
+        // Toggle Cutaway
+        document.getElementById('btn-cutaway').addEventListener('click', () => {
+            State.isCutaway = !State.isCutaway;
+            renderer.localClippingEnabled = State.isCutaway;
+        });
+
+        // Auto Camera
+        document.getElementById('btn-cam').addEventListener('click', () => {
+            State.isAutoCam = !State.isAutoCam;
+            if(!State.isAutoCam) {
+                // Reset camera smoothly
+                gsap.to(camera.position, { x: -15, y: 8, z: 20, duration: 1 });
+                controls.target.set(0,0,0);
+            }
+        });
+
+        // ==========================================
+        // AUTOMATED DIAGNOSTICS SEQUENCE
+        // ==========================================
+        document.getElementById('btn-diag').addEventListener('click', runDiagnostics);
+
+        async function runDiagnostics() {
+            if(State.diagnosticMode) return;
+            State.diagnosticMode = true;
+            
+            const panel = document.getElementById('diagnostic-panel');
+            const list = document.getElementById('diag-list');
+            const finalMsg = document.getElementById('diag-final');
+            
+            panel.style.display = 'flex';
+            list.innerHTML = '';
+            finalMsg.style.display = 'none';
+            DOM.status.innerText = "DIAGNOSTICS";
+            DOM.status.style.color = "var(--accent-cyan)";
+
+            // Helper to add checklist items
+            const addCheck = async (text, delay, targetRPM, isWarn = false) => {
+                return new Promise(resolve => {
+                    const id = 'chk-' + Math.random().toString(36).substr(2, 5);
+                    list.innerHTML += `<div class="diag-item"><span>${text}</span> <span id="${id}" class="diag-status">Testing...</span></div>`;
+                    
+                    if(targetRPM !== null) {
+                        State.targetRPM = targetRPM;
+                        DOM.throttleSlider.value = targetRPM;
+                        document.getElementById('val-throttle').innerText = targetRPM + '%';
+                    }
+
+                    setTimeout(() => {
+                        const el = document.getElementById(id);
+                        if(isWarn) {
+                            el.innerText = 'PASS';
+                            el.className = 'status-warn';
+                        } else {
+                            el.innerText = '✔ VERIFIED';
+                            el.className = 'status-pass';
+                        }
+                        resolve();
+                    }, delay);
+                });
+            };
+
+            // Sequence
+            State.targetRPM = 0;
+            await addCheck('Initializing Data Bus...', 1000, 0);
+            await addCheck('Checking Rotor Balance...', 2000, 15);
+            await addCheck('Checking Shaft Alignment...', 1500, null);
+            await addCheck('Fuel System & Pumps...', 2000, 40);
+            await addCheck('Ignition Sequence...', 1500, null);
+            await addCheck('Emergency Fire Suppressant...', 1500, null, true);
+            await addCheck('Vibration Nominal Check...', 2000, 80);
+            await addCheck('Spool Down Test...', 2000, 0);
+
+            finalMsg.style.display = 'block';
+            DOM.status.innerText = "READY";
+            DOM.status.style.color = "var(--alert-green)";
+            
+            setTimeout(() => {
+                panel.style.display = 'none';
+                State.diagnosticMode = false;
+            }, 3000);
+        }
+
+        // ==========================================
+        // RESIZE HANDLER
+        // ==========================================
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start Loop
+        animate();
+
+    </script>
+</body>
+</html>
