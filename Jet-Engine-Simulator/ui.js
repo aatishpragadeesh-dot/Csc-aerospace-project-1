@@ -495,6 +495,8 @@ class UIManager {
      */
     startGaugeUpdates() {
         setTimeout(() => this.updateGauges(), 100);
+        TooltipManager.attachTooltips();
+        AnimationController.animateViewportReveal(this.simulator);
     }
     
     /**
@@ -641,4 +643,140 @@ class UIManager {
         this.updateHotspotPositions();
     }
     } 
-     
+     /* ========================================
+   ADVANCED ANIMATIONS WITH GSAP
+   Sophisticated timeline-based animations
+   ======================================== */
+
+/**
+ * AnimationController
+ * Manages complex animation sequences
+ */
+class AnimationController {
+    /**
+     * Create viewport reveal animation
+     * @param {JetEngineSimulator} simulator - Main simulator
+     */
+    static animateViewportReveal(simulator) {
+        const tl = gsap.timeline();
+        
+        // Engine assembly animation
+        tl.from(simulator.engine.components.fan, {
+            opacity: 0,
+            scaleZ: 0,
+            duration: 0.8,
+            ease: 'back.out'
+        }, 0)
+        .from(simulator.engine.components.lpc, {
+            opacity: 0,
+            scaleZ: 0,
+            duration: 0.8,
+            ease: 'back.out'
+        }, 0.1)
+        .from(simulator.engine.components.hpc, {
+            opacity: 0,
+            scaleZ: 0,
+            duration: 0.8,
+            ease: 'back.out'
+        }, 0.2)
+        .from(simulator.engine.components.combustor, {
+            opacity: 0,
+            scaleZ: 0,
+            duration: 0.8,
+            ease: 'back.out'
+        }, 0.3);
+    }
+    
+    /**
+     * Animate engine startup sequence
+     * @param {JetEngineSimulator} simulator - Main simulator
+     */
+    static animateStartup(simulator) {
+        gsap.to(simulator, {
+            currentRPM: 20000,
+            duration: 5,
+            ease: 'power2.inOut'
+        });
+    }
+}
+
+/* ========================================
+   DOCUMENTATION AND TOOLTIPS
+   Embedded help system
+   ======================================== */
+
+/**
+ * Tooltip Manager
+ * Provides contextual help throughout application
+ */
+class TooltipManager {
+    /**
+     * Attach tooltips to elements
+     */
+    static attachTooltips() {
+        const tooltips = {
+            'rpmSlider': 'Adjust engine speed from idle to maximum RPM',
+            'throttleSlider': 'Control throttle position (0-100%)',
+            'autoCameraButton': 'Start automatic camera tour of engine',
+            'diagnosticsButton': 'Run comprehensive system diagnostics',
+            'showParticles': 'Toggle particle effects visibility',
+            'showFlame': 'Toggle combustion flame visibility',
+            'showLabels': 'Toggle component labels and annotations'
+        };
+        
+        Object.entries(tooltips).forEach(([elementId, text]) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.addEventListener('mouseenter', () => {
+                    TooltipManager.show(element, text);
+                });
+                element.addEventListener('mouseleave', () => {
+                    TooltipManager.hide();
+                });
+            }
+        });
+    }
+    
+    /**
+     * Show tooltip
+     * @param {HTMLElement} element - Target element
+     * @param {string} text - Tooltip text
+     */
+    static show(element, text) {
+        const tooltip = document.getElementById('tooltip');
+        if (!tooltip) return;
+        
+        tooltip.textContent = text;
+        
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+        tooltip.style.top = (rect.top - 40) + 'px';
+        tooltip.style.display = 'block';
+        
+        gsap.to(tooltip, { opacity: 1, duration: 0.2 });
+    }
+    
+    /**
+     * Hide tooltip
+     */
+    static hide() {
+        const tooltip = document.getElementById('tooltip');
+        if (tooltip) {
+            gsap.to(tooltip, {
+                opacity: 0,
+                duration: 0.2,
+                onComplete: () => {
+                    tooltip.style.display = 'none';
+                }
+            });
+        }
+    }
+}
+
+/* ========================================
+   INITIALIZATION ENHANCEMENTS
+   ======================================== */
+
+// === ADD TO UIManager.initialize() ===
+// TooltipManager.attachTooltips();
+// AnimationController.animateViewportReveal(this.simulator);
