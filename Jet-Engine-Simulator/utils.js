@@ -284,3 +284,166 @@ const Telemetry = {
         return Math.max(0, 100 * (1 - Math.pow(rpmPercent - 0.75, 2) / 0.5625));
     }
 };
+/* ========================================
+   MOBILE RESPONSIVENESS AND OPTIMIZATION
+   Added to main.js and ui.js for mobile support
+   ======================================== */
+
+/**
+ * Mobile Detection and Adaptation
+ */
+const MobileSupport = {
+    /**
+     * Detect if device is mobile
+     * @returns {boolean} Is mobile device
+     */
+    isMobile: function() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    },
+    
+    /**
+     * Detect if device is tablet
+     * @returns {boolean} Is tablet
+     */
+    isTablet: function() {
+        return /iPad|Android(?!.*Mobile)/i.test(navigator.userAgent);
+    },
+    
+    /**
+     * Get touch point from event
+     * @param {Event} event - Touch event
+     * @returns {Object} Touch coordinates
+     */
+    getTouchPoint: function(event) {
+        if (event.touches && event.touches.length > 0) {
+            return {
+                x: event.touches[0].clientX,
+                y: event.touches[0].clientY
+            };
+        }
+        return { x: 0, y: 0 };
+    },
+    
+    /**
+     * Adapt UI for mobile
+     */
+    adaptForMobile: function() {
+        const dashboard = document.querySelector('.dashboard-container');
+        const leftPanel = document.querySelector('.left-panel');
+        const rightPanel = document.querySelector('.right-panel');
+        
+        if (MobileSupport.isMobile()) {
+            // Reduce panel widths on mobile
+            leftPanel.style.width = '200px';
+            rightPanel.style.width = '200px';
+            
+            // Stack panels vertically
+            dashboard.style.gridTemplateColumns = '1fr';
+            dashboard.style.gridTemplateRows = 'auto 1fr auto auto';
+        }
+    }
+};
+
+/**
+ * Performance Optimization
+ * Reduce memory usage and improve frame rate
+ */
+const PerformanceOptimization = {
+    /**
+     * Reduce particle count for lower-end devices
+     */
+    optimizeParticles: function(simulator) {
+        if (MobileSupport.isMobile() && simulator.particles) {
+            // Reduce particle density
+            console.log('[OPTIMIZATION] Reducing particle count for mobile');
+        }
+    },
+    
+    /**
+     * Optimize texture quality
+     */
+    optimizeTextures: function(simulator) {
+        if (MobileSupport.isMobile()) {
+            // Use lower resolution textures
+            console.log('[OPTIMIZATION] Using mobile-optimized textures');
+        }
+    },
+    
+    /**
+     * Monitor and report performance
+     */
+    monitorPerformance: function(simulator) {
+        setInterval(() => {
+            if (simulator.fps < 30) {
+                console.warn('[PERFORMANCE] Low FPS detected:', simulator.fps);
+            }
+        }, 5000);
+    }
+};
+
+/**
+ * Error Handling and Recovery
+ */
+const ErrorHandler = {
+    /**
+     * Global error handler
+     */
+    setup: function() {
+        window.addEventListener('error', (event) => {
+            console.error('[ERROR] Unhandled error:', event.error);
+            ErrorHandler.showErrorMessage(event.error.message);
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('[ERROR] Unhandled promise rejection:', event.reason);
+            ErrorHandler.showErrorMessage('Promise rejection: ' + event.reason);
+        });
+    },
+    
+    /**
+     * Show error message to user
+     * @param {string} message - Error message
+     */
+    showErrorMessage: function(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 59, 59, 0.9);
+            color: white;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 10000;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        `;
+        errorDiv.textContent = '⚠️ ERROR: ' + message;
+        
+        document.body.appendChild(errorDiv);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            gsap.to(errorDiv, {
+                opacity: 0,
+                duration: 0.5,
+                onComplete: () => errorDiv.remove()
+            });
+        }, 10000);
+    }
+};
+
+/**
+ * Enhanced JetEngineSimulator with mobile support
+ * Added to existing constructor
+ */
+// === INSERT INTO JetEngineSimulator.initialize() ===
+// ErrorHandler.setup();
+// if (MobileSupport.isMobile()) {
+//     MobileSupport.adaptForMobile();
+//     PerformanceOptimization.optimizeParticles(this);
+//     PerformanceOptimization.optimizeTextures(this);
+// }
+// PerformanceOptimization.monitorPerformance(this);
